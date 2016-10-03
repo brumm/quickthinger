@@ -2,5 +2,14 @@
 .container {
   width: 100vw;
   height: 100vh;
-  background-color: #ECECEC;
+}
+
+.sentence-fragment {
+  padding: 20px 0;
+  background-color: #f4f4f4;
+}
+
+.sentence-object-label {
+  margin-top: 5px;
+  font-size: 12px;
 }

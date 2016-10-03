@@ -1,0 +1,14 @@
+.list-item {
+  padding: 0 15px;
+}
+
+.list-item-selected {
+  composes: list-item;
+  background-color: skyblue !important;
+}
+
+.loading-container {
+  position: absolute;
+  top: 0; right: 0;
+  bottom: 0; left: 0;
+}

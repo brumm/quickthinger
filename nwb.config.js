@@ -6,7 +6,8 @@ const DirectoryNamedWebpackPlugin = require("directory-named-webpack-plugin");
 const cssConfig = {
   query: {
     modules: true,
-    localIdentName: '[local]-[hash:base64:10]'
+    localIdentName: '[local]-[hash:base64:10]',
+    camelCase: true
   }
 }
 
@@ -22,9 +23,9 @@ module.exports = {
       output: {
         publicPath: ''
       },
-      plugins: [
-        new webpack.ResolverPlugin(new DirectoryNamedWebpackPlugin())
-      ],
+      // plugins: [
+      //   new webpack.ResolverPlugin(new DirectoryNamedWebpackPlugin())
+      // ],
       target: 'electron-renderer'
     },
     html: {

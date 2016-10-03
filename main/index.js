@@ -1,7 +1,15 @@
-
 import { app, BrowserWindow, Menu, screen, ipcMain } from 'electron'
-import template from './menu-template.js'
 import windowStateKeeper from 'electron-window-state'
+import irpc from 'electron-irpc'
+
+import template from './menu-template'
+import getDirectoryContent from './getDirectoryContent'
+import getIconForFile from './getIconForFile'
+
+const irpcMain = irpc.main()
+
+irpcMain.addFunction('getDirectoryContent', getDirectoryContent)
+irpcMain.addFunction('getIconForFile', getIconForFile)
 
 const { DEV, PORT = '8080' } = process.env
 const windowUrl = DEV
@@ -13,8 +21,8 @@ let mainWindow
 function createWindow () {
   let { width, height } = screen.getPrimaryDisplay().workAreaSize
   let mainWindowState = windowStateKeeper({
-    defaultWidth: width * 0.9,
-    defaultHeight: height * 0.9
+    defaultWidth: 300,
+    defaultHeight: 200
   });
 
   mainWindow = new BrowserWindow({
@@ -22,13 +30,13 @@ function createWindow () {
     height: mainWindowState.height,
     x: mainWindowState.x,
     y: mainWindowState.y,
-    minWidth: 1000,
-    minHeight: 700,
-    titleBarStyle: 'hidden-inset',
+    minWidth: 300,
+    minHeight: 200,
+    frame: false,
+    show: false,
     webPreferences: {
       webSecurity: false
-    },
-    show: false
+    }
   })
 
   mainWindowState.manage(mainWindow)

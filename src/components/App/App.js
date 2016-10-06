@@ -3,12 +3,11 @@ import React from 'react'
 import { routerContext as routerContextType } from 'react-router/PropTypes'
 import { filter } from 'fuzzaldrin-plus'
 import Flex from 'flex-component'
-import Pinky from 'react-pinky-promise'
+import { shell } from 'electron'
 
+import Icon from 'components/Icon'
 import QTList from 'components/QTList/QTList'
 import highlightMatch from 'highlightMatch'
-
-import { getIconForFile } from 'irpc'
 
 import css from './App.scss'
 
@@ -45,7 +44,7 @@ class App extends React.Component {
 
       case 'ArrowLeft':
         if (this.props.path !== '/') {
-          this.setState({ index: 0 }, () => (
+          this.setState({ index: 0, search: [] }, () => (
             this.context.router.transitionTo({
               pathname: `/${this.props.path.split('/').filter(Boolean).slice(0, -1).join('/')}`,
               state: { previousPath: decodeURI(this.props.path.slice(0, -1)) }
@@ -72,6 +71,13 @@ class App extends React.Component {
       case 'ArrowUp':
         event.preventDefault()
         this.setState({ index: wrap(this.state.index - 1, this.filteredItems().length) })
+        break
+
+      case 'Enter':
+        event.preventDefault()
+        shell.openItem(
+          this.filteredItems()[this.state.index].path
+        )
         break
 
       default:
@@ -118,18 +124,12 @@ class App extends React.Component {
 
     return (
       <Flex className={css.container} direction='column'>
-        <Flex shrink={0} justifyContent='center'>
+        <Flex shrink={0} justifyContent='center' className={css.sentence}>
 
           <Flex grow={1} basis='0' className={css.sentenceFragment} alignItems='center' justifyContent='center' direction='column'>
 
             {this.filteredItems()[this.state.index] && (
-              <div style={{ width: 128, height: 128 }}>
-                  <Pinky promise={getIconForFile(this.filteredItems()[this.state.index].path)}>
-                  {({ resolved }) => (
-                    resolved ? <img width={128} height={128} src={resolved} /> : null
-                  )}
-                </Pinky>
-              </div>
+              <Icon path={this.filteredItems()[this.state.index].path} size={128} />
             )}
 
             <div className={css.sentenceObjectLabel} dangerouslySetInnerHTML={{ __html: name }} />
@@ -145,9 +145,11 @@ class App extends React.Component {
           </Flex>
 
         </Flex>
+
         <Flex grow={1}>
           <QTList
             loading={this.props.loading}
+            didSearch={this.state.search.length > 0}
             items={this.filteredItems()}
             selectedIndex={this.state.index}
             onIndexChange={index => this.setState({ index })}

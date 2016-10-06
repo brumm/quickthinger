@@ -1,10 +1,13 @@
-const readdir = require("readdir-plus")
+import readdir from 'readdir-plus'
 
-export default function getDirectoryContent(path, callback) {
-  readdir(path, {
+function getDirectoryContent(path, callback) {
+
+  const content = readdir(path, {
     return: 'details',
     recursive: false,
     stat: false,
     filter: { directory: true }
   }, callback)
 }
+
+export default getDirectoryContent

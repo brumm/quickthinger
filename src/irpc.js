@@ -1,12 +1,19 @@
 import irpc from 'electron-irpc'
 const irpcRenderer = irpc.renderer()
 
+import Cache from 'cache'
+
+const cache = new Cache(1000 * 60 * 5)
+
 export const getDirectoryContent = (path) => (
-  new Promise((resolve, reject) => (
-    irpcRenderer.call('getDirectoryContent', path, (err, items) => (
-      err ? reject(err) : resolve(items)
+  cache.has(path) ? Promise.resolve(cache.get(path)) : (
+    new Promise((resolve, reject) => (
+      irpcRenderer.call('getDirectoryContent', path, (err, items) => {
+        cache.set(path, items)
+        err ? reject(err) : resolve(items)
+      })
     ))
-  ))
+  )
 )
 
 export const getIconForFile = (path) => (

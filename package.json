@@ -10,7 +10,7 @@
     "build-electron-main": "babel main -d dist",
     "watch-electron-main": "babel main -d dist -w",
     "clean": "nwb clean",
-    "start": "babel main -d dist && node dev-server.js --run-electron",
+    "start": "node dev-server.js --run-electron",
     "test": "nwb test",
     "test:watch": "nwb test --server",
     "package": "rm -rf ./release && electron-packager --overwrite --asar='true' --ignore='src|main|tests' --prune --platform=darwin --arch=x64 --out='release' ."
@@ -21,6 +21,7 @@
     "flex-component": "^0.1.3",
     "fuzzaldrin-plus": "^0.3.1",
     "halogen": "^0.2.0",
+    "lodash": "^4.16.3",
     "nodobjc": "^2.1.0",
     "react": "^15.3.0",
     "react-addons-shallow-compare": "^15.3.2",

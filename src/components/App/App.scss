@@ -2,14 +2,26 @@
 .container {
   width: 100vw;
   height: 100vh;
+
+  // -webkit-font-smoothing: antialiased;
+  font-size: 12px;
+
+  background-color: #fff;
+  color: #1c1c1c;
 }
 
+.sentence {
+  padding: 5px;
+}
 .sentence-fragment {
-  padding: 20px 0;
-  background-color: #f4f4f4;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 3px;
 }
 
 .sentence-object-label {
   margin-top: 5px;
-  font-size: 12px;
+  white-space: nowrap;
+  max-width: 100%;
+  text-overflow: ellipsis;
 }

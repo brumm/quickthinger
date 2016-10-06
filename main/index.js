@@ -21,8 +21,8 @@ let mainWindow
 function createWindow () {
   let { width, height } = screen.getPrimaryDisplay().workAreaSize
   let mainWindowState = windowStateKeeper({
-    defaultWidth: 300,
-    defaultHeight: 200
+    defaultWidth: 400,
+    defaultHeight: 440
   });
 
   mainWindow = new BrowserWindow({
@@ -30,8 +30,8 @@ function createWindow () {
     height: mainWindowState.height,
     x: mainWindowState.x,
     y: mainWindowState.y,
-    minWidth: 300,
-    minHeight: 200,
+    minWidth: 400,
+    minHeight: 235,
     frame: false,
     show: false,
     webPreferences: {

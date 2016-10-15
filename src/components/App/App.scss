@@ -3,6 +3,7 @@
   width: 100vw;
   height: 100vh;
 
+  -webkit-app-region: drag;
   // -webkit-font-smoothing: antialiased;
   font-size: 12px;
 
@@ -17,6 +18,10 @@
   padding: 10px;
   margin: 5px;
   border-radius: 3px;
+}
+.sentence-fragment-active {
+  composes: sentence-fragment;
+  background-color: fade-out(#B3D8FD, 0.7);
 }
 
 .sentence-object-label {

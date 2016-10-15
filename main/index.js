@@ -31,7 +31,7 @@ function createWindow () {
     x: mainWindowState.x,
     y: mainWindowState.y,
     minWidth: 400,
-    minHeight: 235,
+    minHeight: 185,
     frame: false,
     show: false,
     webPreferences: {

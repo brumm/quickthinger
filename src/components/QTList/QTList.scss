@@ -1,3 +1,7 @@
+.list {
+  border-top: 1px solid #eeeeee;
+}
+
 .list-item {
   padding: 0 15px;
 }
@@ -12,13 +16,16 @@
   background-color: rgba(0, 0, 0, 0.03);
 }
 
-.loading-container {
+.list-item-empty {
   position: absolute;
   top: 0; right: 0;
   bottom: 0; left: 0;
 }
 
-.name {
+.loading-container {
+  position: absolute;
+  top: 0; right: 0;
+  bottom: 0; left: 0;
 }
 
 .path {
@@ -27,7 +34,4 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 0.5;
-}
-
-.path-selected {
 }

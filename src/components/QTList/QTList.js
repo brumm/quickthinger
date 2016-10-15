@@ -8,19 +8,22 @@ import Icon from 'components/Icon'
 
 import css from './QTList.scss'
 
-const LIST_ITEM_HEIGHT = 50
-
 const electronWindow = remote.getCurrentWindow()
 
 export default class QTList extends React.Component {
 
+  static defaultProps = {
+    listItemHeight: 50
+  }
+
   loadingRenderer = () => (
-    <Flex className={css.listItemEmpty} style={{ height: LIST_ITEM_HEIGHT }} justifyContent='center' alignItems='center'>
+    <Flex className={css.listItemEmpty} justifyContent='center' alignItems='center'>
+      <Loader />
     </Flex>
   )
 
   noRowsRenderer = () => (
-    <Flex className={css.listItemEmpty} style={{ height: LIST_ITEM_HEIGHT }} justifyContent='center' alignItems='center'>
+    <Flex className={css.listItemEmpty} style={{ height: this.props.listItemHeight }} justifyContent='center' alignItems='center'>
       {this.props.didSearch ? 'No Result' : 'This folder is empty'}
     </Flex>
   )
@@ -52,19 +55,20 @@ export default class QTList extends React.Component {
   )
 
   render() {
-    // let height = Math.min(Math.max(this.props.items.length * LIST_ITEM_HEIGHT, LIST_ITEM_HEIGHT), 5 * LIST_ITEM_HEIGHT)
-    // if (!this.props.loading) {
-    //   electronWindow.setSize(window.innerWidth, height + 185)
-    // }
+    let listHeight = Math.min(this.props.items.length * this.props.listItemHeight, 4.5 * this.props.listItemHeight)
+    if (!this.props.loading) {
+      electronWindow.setSize(window.innerWidth, listHeight + 185)
+    }
     return (
       <AutoSizer>
         {({ width, height }) => (
           <List
+            className={css.list}
             width={width}
-            height={height}
+            height={listHeight}
             rowCount={this.props.items.length}
-            rowHeight={LIST_ITEM_HEIGHT}
-            noRowsRenderer={this.props.loading ? this.loadingRenderer : this.noRowsRenderer}
+            rowHeight={this.props.listItemHeight}
+            noRowsRenderer={this.props.loading ? this.loadingRenderer : undefined}
             rowRenderer={this.rowRenderer}
             scrollToIndex={this.props.selectedIndex}
             tabIndex={null}

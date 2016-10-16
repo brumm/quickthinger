@@ -1,5 +1,7 @@
 .list {
-  border-top: 1px solid #eeeeee;
+  // &::-webkit-scrollbar {
+  //   display: none;
+  // }
 }
 
 .list-item {
@@ -9,6 +11,10 @@
 .list-item-selected {
   composes: list-item;
   background-color: #B3D8FD;
+
+  .descendable-indicator {
+    color: rgba(0, 0, 0, 0.5);
+  }
 }
 
 .list-item-odd {
@@ -34,4 +40,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 0.5;
+}
+
+.descendable-indicator {
+  padding-left: 15px;
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.25);
+  margin-left: auto;
 }

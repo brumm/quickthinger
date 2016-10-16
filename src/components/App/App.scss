@@ -1,4 +1,3 @@
-
 .container {
   width: 100vw;
   height: 100vh;
@@ -12,21 +11,33 @@
 }
 
 .sentence {
+  min-height: 185px;
   padding: 5px;
-}
-.sentence-fragment {
-  padding: 10px;
-  margin: 5px;
-  border-radius: 3px;
-}
-.sentence-fragment-active {
-  composes: sentence-fragment;
-  background-color: fade-out(#B3D8FD, 0.7);
-}
+  overflow: visible;
+  position: relative;
 
-.sentence-object-label {
-  margin-top: 5px;
-  white-space: nowrap;
-  max-width: 100%;
-  text-overflow: ellipsis;
+  &::after {
+    content: '';
+    z-index: 2;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 8px;
+
+    background-image:
+        radial-gradient(
+          farthest-side at 50% 0,
+          rgba(0, 0, 0, 0.2),
+          rgba(0, 0, 0, 0)
+        ),
+        radial-gradient(
+          farthest-side at 50% 0,
+          rgba(0, 0, 0, 0.1),
+          rgba(0, 0, 0, 0.05)
+        );
+    background-repeat: no-repeat;
+    background-position: 50% 0, 0 0;
+    background-size: 150% 8px, 100% 1px;
+  }
 }

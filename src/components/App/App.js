@@ -1,219 +1,227 @@
 
 import React from 'react'
-import { routerContext as routerContextType } from 'react-router/PropTypes'
 import { filter } from 'fuzzaldrin-plus'
 import Flex from 'flex-component'
-import { shell } from 'electron'
 import Pinky from 'react-pinky-promise'
+import fill from 'lodash/fill'
+import KeyHandler from 'react-key-handler'
+import { remote } from 'electron'
 
-import Icon from 'components/Icon'
+import { getDirectoryContent } from 'irpc'
+import objectResolvers from 'objectResolvers'
+import Pane from 'components/Pane/Pane'
 import QTList from 'components/QTList/QTList'
-import highlightMatch from 'highlightMatch'
 
 import css from './App.scss'
 
+const { directObject, actionObject, indirectObject } = objectResolvers
+const electronWindow = remote.getCurrentWindow()
 const wrap = (value, bounds) => (value % bounds + bounds) % bounds
-
-const Pane = ({ children, active }) => (
-  <Flex
-    grow={1}
-    shrink={0}
-    basis='0'
-    className={active ? css.sentenceFragmentActive : css.sentenceFragment}
-    alignItems='center'
-    justifyContent='center'
-    direction='column'
-  >
-    {children}
-  </Flex>
-)
-
-const getActions = path => Promise.resolve([
-  {name: 'Open', path: ''},
-  {name: 'Open With...', path: ''},
-])
 
 class App extends React.Component {
 
-  static contextTypes = {
-    router: routerContextType
-  }
-
+  previousPaneObjects = [
+    { paneObject: { uti: [], displayName: '', icon: '' }, paneResults: [] },
+    { paneObject: { uti: [], displayName: '', icon: '' }, paneResults: [] },
+  ]
   state = {
+    browsingAt: null,
     activePaneIndex: 0,
-    activeListIndex0: 0,
-    activeListIndex1: 0,
-    search: []
+    activeObjectIndexPerPane: [
+      0, 0, 0
+    ],
+    searchTermsPerPane: [
+      '', '', '',
+    ]
   }
 
-  componentWillReceiveProps({ previousPath, items }) {
-    let previousIndex = this.filteredItems(items).findIndex(({ path }) => previousPath === path)
-    if (previousIndex !== -1) {
-      this.setState({ [`activeListIndex${this.state.activePaneIndex}`]: previousIndex })
-    }
-  }
+  browseTo(path) {
+    getDirectoryContent(path).then(items => {
+      if (items.length) {
+        const { activePaneIndex } = this.state.activePaneIndex
+        let activeObjectIndexPerPane = this.state.activeObjectIndexPerPane.slice(0)
+        fill(activeObjectIndexPerPane, 0, activePaneIndex + 1)
 
-  handleKeyDown = ::this.handleKeyDown
-  handleKeyDown(event) {
-    const { key, which, shiftKey } = event
-    switch (key) {
-
-      case 'Backspace':
-        if (this.state.search.length) {
-          this.setState({
-            search: []
-          })
-        } else {
-          this.setState({
-            [`activeListIndex${this.state.activePaneIndex}`]: 0
-          })
-        }
-        break
-
-      case 'ArrowLeft':
-        if (this.props.path !== '/') {
-          this.setState({ [`activeListIndex${this.state.activePaneIndex}`]: 0, search: [] }, () => (
-            this.context.router.transitionTo({
-              pathname: `/${this.props.path.split('/').filter(Boolean).slice(0, -1).join('/')}`,
-              state: { previousPath: decodeURI(this.props.path.slice(0, -1)) }
-            })
-          ))
-        }
-        break
-
-      case ' ':
-      case 'ArrowRight':
-        if (this.filteredItems()[this.state[`activeListIndex${this.state.activePaneIndex}`]].type === 'directory') {
-          this.context.router.transitionTo({
-            pathname: `${this.props.path}${this.filteredItems()[this.state[`activeListIndex${this.state.activePaneIndex}`]].name}`,
-          })
-          this.setState({ [`activeListIndex${this.state.activePaneIndex}`]: 0, search: [] })
-        }
-        break
-
-      case 'ArrowDown':
-        event.preventDefault()
-        this.setState({ [`activeListIndex${this.state.activePaneIndex}`]: wrap(this.state[`activeListIndex${this.state.activePaneIndex}`] + 1, this.filteredItems().length) })
-        break
-
-      case 'ArrowUp':
-        event.preventDefault()
-        this.setState({ [`activeListIndex${this.state.activePaneIndex}`]: wrap(this.state[`activeListIndex${this.state.activePaneIndex}`] - 1, this.filteredItems().length) })
-        break
-
-      case 'Enter':
-        event.preventDefault()
-        shell.openItem(
-          this.filteredItems()[this.state[`activeListIndex${this.state.activePaneIndex}`]].path
-        )
-        break
-
-      case 'Tab':
-        let direction = shiftKey ? -1 : 1
-        event.preventDefault()
+        this.clearSearch()
         this.setState({
-          activePaneIndex: wrap(this.state.activePaneIndex + direction, 2)
-        })
-        break
+          browsingAt: path,
+          activeObjectIndexPerPane
+        });
+      }
+    })
+  }
 
-      default:
-        if (which >= 48 && which <= 57 ||
-            which >= 65 && which <= 90) {
-          this.setState({
-            [`activeListIndex${this.state.activePaneIndex}`]: 0,
-            search: [...this.state.search, key.toLowerCase()]
-          })
-        } else {
-          console.log('unhandled key:', key)
-        }
-        break
+  changeActivePaneIndex(newIndex) {
+    this.setState({
+      activePaneIndex: newIndex
+    });
+  }
+
+  changePaneResultIndex(newIndex, paneIndex = this.state.activePaneIndex) {
+    let activeObjectIndexPerPane = this.state.activeObjectIndexPerPane.slice(0)
+    fill(activeObjectIndexPerPane, 0, paneIndex + 1)
+    activeObjectIndexPerPane[paneIndex] = newIndex
+    this.setState({ activeObjectIndexPerPane })
+  }
+
+  clearSearch(paneIndex = this.state.activePaneIndex) {
+    let searchTermsPerPane = this.state.searchTermsPerPane.slice(0)
+    searchTermsPerPane[paneIndex] = ''
+    this.setState({ searchTermsPerPane })
+  }
+
+  handleSearch = e => {
+    const { which, key } = e
+    const { activePaneIndex } = this.state
+    if (
+      which >= 48 && which <= 57 ||
+      which >= 65 && which <= 90
+    ) {
+      // e.preventDefault()
+      let searchTermsPerPane = this.state.searchTermsPerPane.slice(0)
+      searchTermsPerPane[activePaneIndex] += key
+      fill(searchTermsPerPane, '', activePaneIndex + 1)
+      this.changePaneResultIndex(0)
+      this.setState({ searchTermsPerPane })
     }
   }
 
   componentDidMount() {
-    document.addEventListener('keydown', this.handleKeyDown)
+    document.addEventListener('keydown', this.handleSearch)
   }
-
   componentWillUnmount() {
-    document.removeEventListener('keydown', this.handleKeyDown)
-  }
-
-  filteredItems(items = this.props.items) {
-    items = items
-      .filter(({ name }) => !name.startsWith('.'))
-      .sort(({ name: nameA }, { name: nameB }) => (
-        nameA.toLowerCase() < nameB.toLowerCase() ? -1 : 1
-      ))
-
-    return this.state.search.length
-       ? filter(items, this.state.search.join(''), { key: 'name' })
-       : items
+    document.removeEventListener('keydown', this.handleSearch)
   }
 
   render() {
-    let name = ''
-    if (this.filteredItems().length) {
-      name = highlightMatch(
-        this.filteredItems()[this.state.activeListIndex0].name,
-        this.state.search.join('')
-      )
-    }
+    let { activePaneIndex, activeObjectIndexPerPane, searchTermsPerPane, browsingAt } = this.state
+    let activePaneResultIndex = activeObjectIndexPerPane[activePaneIndex]
+    let activeSearchTerm = searchTermsPerPane[activePaneIndex]
 
-    console.log(this.state);
+    const resolvers = [
+      browsingAt ? () => getDirectoryContent(browsingAt) : directObject,
+      actionObject,
+      indirectObject
+    ]
+
+    const paneObjectsPromise = resolvers.reduce((acc, resolver, paneIndex) => (
+      acc.then(([previousPane, ...otherPanes]) => (
+        resolver(previousPane && previousPane.paneResults[activeObjectIndexPerPane[paneIndex - 1]])
+          .then(currentPaneResults => {
+            const searchTerm = searchTermsPerPane[paneIndex]
+            currentPaneResults = searchTerm
+              ? filter(currentPaneResults, searchTerm, { key: 'displayName' })
+              : currentPaneResults
+            return [
+              {
+                paneResults: currentPaneResults,
+                paneObject: currentPaneResults[activeObjectIndexPerPane[paneIndex]],
+                searchTerm
+              },
+              previousPane,
+              ...otherPanes
+            ]
+          })
+      ))
+    ), Promise.resolve([])).then(intermediary => intermediary.reverse().filter(Boolean))
+
     return (
       <Flex className={css.container} direction='column'>
-        <Flex shrink={0} justifyContent='center' className={css.sentence}>
+        <Pinky promise={paneObjectsPromise}>
+          {({ resolved: paneObjects = this.previousPaneObjects, rejected, pending: loading }) => {
+            if (rejected) { throw rejected }
 
-          {this.filteredItems()[this.state.activeListIndex0] ? (
-            <Pane active={this.state.activePaneIndex === 0}>
-              <Icon path={this.filteredItems()[this.state.activeListIndex0].path} size={128} />
-              <div className={css.sentenceObjectLabel} dangerouslySetInnerHTML={{ __html: name }} />
-            </Pane>
-          ) : (
-            <Pane active={this.state.activePaneIndex === 0}>
-              <img src={require('search.png')} />
-              <div className={css.sentenceObjectLabel}>
-                No Result
-              </div>
-            </Pane>
-          )}
+              console.info('paneObjects before filter', paneObjects);
+              paneObjects = paneObjects.filter(({ paneObject, searchTerm }) => paneObject || searchTerm)
+              console.info('paneObjects after filter', paneObjects);
 
-          <Pane active={this.state.activePaneIndex === 1}>
-            <div style={{ width: 128, height: 128 }}>
-              <img width={128} height={128} src={require('defaultAction.png')} />
-            </div>
-            <div className={css.sentenceObjectLabel}>
-              Open
-            </div>
-          </Pane>
+              const activePaneObject = paneObjects[activePaneIndex].paneObject
+              const activePaneResults = paneObjects[activePaneIndex].paneResults
 
-        </Flex>
+              let listItemHeight = 50
+              let listHeight = Math.min(activePaneResults.length * listItemHeight, 4.5 * listItemHeight)
 
-        <Flex grow={1}>
-          {this.state.activePaneIndex === 0 &&
-            <QTList
-              loading={this.props.loading}
-              didSearch={this.state.search.length > 0}
-              items={this.filteredItems()}
-              selectedIndex={this.state[`activeListIndex${this.state.activePaneIndex}`]}
-              onIndexChange={index => this.setState({ index })}
-            />
-          }
+              if (!loading) {
+                this.previousPaneObjects = paneObjects
+                electronWindow.setSize(paneObjects.length * 200, listHeight + 185)
+              }
 
-          {this.state.activePaneIndex === 1 &&
-            <Pinky promise={getActions(this.filteredItems()[this.state[`activeListIndex${this.state.activePaneIndex}`]].path)}>
-              {({ pending, resolved, rejected }) => (
-                <QTList
-                  loading={pending}
-                  didSearch={this.state.search.length > 0}
-                  items={resolved}
-                  selectedIndex={this.state[`activeListIndex${this.state.activePaneIndex}`]}
-                  onIndexChange={index => this.setState({ index })}
-                />
-              )}
-            </Pinky>
-          }
-        </Flex>
+              return (
+                <Flex grow={1} direction='column'>
+
+                  {!loading && activePaneObject && activePaneObject.components && browsingAt !== '/' &&
+                    <KeyHandler keyEventName='keydown' keyValue='ArrowLeft'
+                      onKeyHandle={() => this.browseTo(activePaneObject.components.slice(0, -2).join('/'))}
+                    />
+                  }
+
+                  {!loading && activePaneObject && activePaneObject.uti.includes('public.folder') &&
+                    <KeyHandler keyEventName='keydown' keyValue='ArrowRight'
+                      onKeyHandle={() => this.browseTo(activePaneObject.path)}
+                    />
+                  }
+
+                  {!loading && activePaneObject && activePaneObject.uti.includes('public.folder') &&
+                    <KeyHandler keyEventName='keydown' keyValue=' '
+                      onKeyHandle={() => this.browseTo(activePaneObject.path)}
+                    />
+                  }
+
+                  {!loading && activePaneObject &&
+                    <KeyHandler keyEventName='keydown' keyValue='ArrowDown'
+                      onKeyHandle={() => this.changePaneResultIndex(
+                        wrap(activePaneResultIndex + 1, activePaneResults.length)
+                    )} />
+                  }
+
+                  {!loading && activePaneObject &&
+                    <KeyHandler keyEventName='keydown' keyValue='ArrowUp'
+                      onKeyHandle={() => this.changePaneResultIndex(
+                        wrap(activePaneResultIndex - 1, activePaneResults.length)
+                    )} />
+                  }
+
+                  {!loading && activePaneObject &&
+                    <KeyHandler keyEventName='keydown' keyValue='Tab'
+                      onKeyHandle={({ shiftKey }) => this.changeActivePaneIndex(
+                        wrap(activePaneIndex + (shiftKey ? -1 : 1), paneObjects.length)
+                    )} />
+                  }
+
+                  {activeSearchTerm &&
+                    <KeyHandler keyEventName='keydown' keyValue='Backspace'
+                      onKeyHandle={() => this.clearSearch()} />
+                  }
+
+                  <Flex className={css.sentence}>
+                    {paneObjects.length !== 1
+                      ? paneObjects.map(({ paneObject = {}, searchTerm }, paneIndex) => (
+                      <Pane
+                        key={`pane-${paneIndex}`}
+                        active={paneIndex === activePaneIndex}
+                        label={paneObject.displayName || paneObject.name}
+                        searchTerm={searchTerm}
+                        icon={paneObject.icon || paneObject.path}
+                        changeActivePaneIndex={() => this.changeActivePaneIndex(paneIndex)}
+                      />
+                  )) : [<Pane key='directObjectId' active label='Type to search' />, <Pane key='actionObjectId' />]}
+                  </Flex>
+
+                  <Flex grow={1}>
+                    <QTList
+                      loading={loading}
+                      height={listHeight}
+                      listItemHeight={listItemHeight}
+                      items={activePaneResults}
+                      selectedIndex={activePaneResultIndex}
+                      onIndexChange={index => this.changePaneResultIndex(index)}
+                    />
+                  </Flex>
+              </Flex>
+              )
+
+          }}
+        </Pinky>
       </Flex>
     )
   }

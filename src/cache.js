@@ -6,7 +6,7 @@ export default class Cache {
 
   has(key) {
     if (!this.store.has(key)) {
-      console.info('cache empty', key);
+      console.info('[cache] empty', key);
       return false
     }
 
@@ -14,8 +14,8 @@ export default class Cache {
     const now = Date.now()
 
     now - timestamp >= this.cacheDuration
-     ? console.info('cache miss', key)
-     : console.info('cache hit', key)
+     ? console.info('[cache] miss', key)
+     : console.info('[cache] hit', key)
 
     return now - timestamp >= this.cacheDuration
       ? false

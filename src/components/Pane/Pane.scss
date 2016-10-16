@@ -1,0 +1,17 @@
+.sentence-fragment {
+  min-width: 185px;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 4px;
+}
+.sentence-fragment-active {
+  composes: sentence-fragment;
+  background-color: fade-out(#B3D8FD, 0.7);
+}
+
+.sentence-object-label {
+  margin-top: 5px;
+  white-space: nowrap;
+  max-width: 100%;
+  text-overflow: ellipsis;
+}

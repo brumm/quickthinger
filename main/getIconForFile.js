@@ -6,11 +6,11 @@ $.framework('AppKit')
 export default function getIconForFile(path, callback, { width = 128, height = 128 } = {}) {
   const pool     = $.NSAutoreleasePool('alloc')('init')
 
-  const rect     = $.NSMakeRect(0, 0, width, height)
-  const dict   = $.NSDictionary('dictionaryWithObject', $(1), 'forKey', $.NSString('stringWithUTF8String', ''))
-  path           = $.NSString('stringWithUTF8String', path)
+  const rect = $.NSMakeRect(0, 0, width, height)
+  const dict = $.NSDictionary('dictionaryWithObject', $(1), 'forKey', $.NSString('stringWithUTF8String', ''))
+  path = $.NSString('stringWithUTF8String', path)
 
-  const icon     = $.NSWorkspace('sharedWorkspace')('iconForFile', path)
+  const icon = $.NSWorkspace('sharedWorkspace')('iconForFile', path)
   const bestIcon = icon('bestRepresentationForRect', rect, 'context', null, 'hints', null)
   const bestImage = $.NSImage('alloc')('init')
   bestImage('addRepresentation', bestIcon)

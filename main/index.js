@@ -5,11 +5,13 @@ import irpc from 'electron-irpc'
 import template from './menu-template'
 import getDirectoryContent from './getDirectoryContent'
 import getIconForFile from './getIconForFile'
+import getRecentDocumentsForApplication from './getRecentDocumentsForApplication'
 
 const irpcMain = irpc.main()
 
 irpcMain.addFunction('getDirectoryContent', getDirectoryContent)
 irpcMain.addFunction('getIconForFile', getIconForFile)
+irpcMain.addFunction('getRecentDocumentsForApplication', getRecentDocumentsForApplication)
 
 const { DEV, PORT = '8080' } = process.env
 const windowUrl = DEV

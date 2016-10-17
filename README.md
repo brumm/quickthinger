@@ -1,5 +1,6 @@
-# nwb-electron-starter
+# quickthinger
 
-work-in-progress repo for my personal nwb/electron setup.
+quicksilver clone in react + electron
 
-![](http://i.imgur.com/2sVbLRc.png)
+![](http://i.imgur.com/rrkzPLl.png)
+![](http://i.imgur.com/batvGUp.png)

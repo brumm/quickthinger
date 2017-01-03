@@ -19,7 +19,7 @@ export default function getIconForFile(path, callback, { width = 128, height = 1
 
   const base64 = png('base64Encoding')
 
-  callback(null, 'data:image/png;base64,' + base64.toString())
+  callback(null, base64.toString())
 
   pool('drain')
 }

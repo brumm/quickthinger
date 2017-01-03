@@ -36,6 +36,9 @@ class App extends React.Component {
     ]
   }
 
+  quickLook(path) {
+    electronWindow.previewFile(path)
+  }
   browseTo(path) {
     getDirectoryContent(path).then(items => {
       if (items.length) {
@@ -158,15 +161,25 @@ class App extends React.Component {
                     />
                   }
 
-                  {!loading && activePaneObject && activePaneObject.uti.includes('public.folder') &&
+                  {!loading && activePaneObject &&
                     <KeyHandler keyEventName='keydown' keyValue='ArrowRight'
-                      onKeyHandle={() => this.browseTo(activePaneObject.path)}
+                      onKeyHandle={e => {
+                        e.preventDefault()
+                        activePaneObject.uti.includes('public.folder')
+                          ? this.browseTo(activePaneObject.path)
+                          : this.quickLook(activePaneObject.path)
+                      }}
                     />
                   }
 
-                  {!loading && activePaneObject && activePaneObject.uti.includes('public.folder') &&
+                  {!loading && activePaneObject &&
                     <KeyHandler keyEventName='keydown' keyValue=' '
-                      onKeyHandle={() => this.browseTo(activePaneObject.path)}
+                      onKeyHandle={e => {
+                        e.preventDefault()
+                        activePaneObject.uti.includes('public.folder')
+                          ? this.browseTo(activePaneObject.path)
+                          : this.quickLook(activePaneObject.path)
+                      }}
                     />
                   }
 

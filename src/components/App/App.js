@@ -24,6 +24,7 @@ class App extends React.Component {
     { paneObject: { uti: [], displayName: '', icon: '' }, paneResults: [] },
     { paneObject: { uti: [], displayName: '', icon: '' }, paneResults: [] },
   ]
+
   state = {
     browsingAt: null,
     activePaneIndex: 0,
@@ -46,7 +47,7 @@ class App extends React.Component {
         this.setState({
           browsingAt: path,
           activeObjectIndexPerPane
-        });
+        })
       }
     })
   }
@@ -54,7 +55,7 @@ class App extends React.Component {
   changeActivePaneIndex(newIndex) {
     this.setState({
       activePaneIndex: newIndex
-    });
+    })
   }
 
   changePaneResultIndex(newIndex, paneIndex = this.state.activePaneIndex) {
@@ -89,6 +90,7 @@ class App extends React.Component {
   componentDidMount() {
     document.addEventListener('keydown', this.handleSearch)
   }
+
   componentWillUnmount() {
     document.removeEventListener('keydown', this.handleSearch)
   }
@@ -131,9 +133,7 @@ class App extends React.Component {
           {({ resolved: paneObjects = this.previousPaneObjects, rejected, pending: loading }) => {
             if (rejected) { throw rejected }
 
-              console.info('paneObjects before filter', paneObjects);
               paneObjects = paneObjects.filter(({ paneObject, searchTerm }) => paneObject || searchTerm)
-              console.info('paneObjects after filter', paneObjects);
 
               const activePaneObject = paneObjects[activePaneIndex].paneObject
               const activePaneResults = paneObjects[activePaneIndex].paneResults
@@ -151,7 +151,10 @@ class App extends React.Component {
 
                   {!loading && activePaneObject && activePaneObject.components && browsingAt !== '/' &&
                     <KeyHandler keyEventName='keydown' keyValue='ArrowLeft'
-                      onKeyHandle={() => this.browseTo(activePaneObject.components.slice(0, -2).join('/'))}
+                      onKeyHandle={e => {
+                        e.preventDefault()
+                        this.browseTo(activePaneObject.components.slice(0, -2).join('/'))
+                      }}
                     />
                   }
 
@@ -169,28 +172,43 @@ class App extends React.Component {
 
                   {!loading && activePaneObject &&
                     <KeyHandler keyEventName='keydown' keyValue='ArrowDown'
-                      onKeyHandle={() => this.changePaneResultIndex(
-                        wrap(activePaneResultIndex + 1, activePaneResults.length)
-                    )} />
+                      onKeyHandle={e => {
+                        e.preventDefault()
+                        this.changePaneResultIndex(
+                          wrap(activePaneResultIndex + 1, activePaneResults.length)
+                        )
+                      }
+                    } />
                   }
 
                   {!loading && activePaneObject &&
                     <KeyHandler keyEventName='keydown' keyValue='ArrowUp'
-                      onKeyHandle={() => this.changePaneResultIndex(
-                        wrap(activePaneResultIndex - 1, activePaneResults.length)
-                    )} />
+                      onKeyHandle={e => {
+                        e.preventDefault()
+                        this.changePaneResultIndex(
+                          wrap(activePaneResultIndex - 1, activePaneResults.length)
+                        )
+                      }
+                    } />
                   }
 
                   {!loading && activePaneObject &&
                     <KeyHandler keyEventName='keydown' keyValue='Tab'
-                      onKeyHandle={({ shiftKey }) => this.changeActivePaneIndex(
-                        wrap(activePaneIndex + (shiftKey ? -1 : 1), paneObjects.length)
-                    )} />
+                      onKeyHandle={e => {
+                        e.preventDefault()
+                        this.changeActivePaneIndex(
+                          wrap(activePaneIndex + (e.shiftKey ? -1 : 1), paneObjects.length)
+                        )
+                      }
+                    } />
                   }
 
                   {activeSearchTerm &&
                     <KeyHandler keyEventName='keydown' keyValue='Backspace'
-                      onKeyHandle={() => this.clearSearch()} />
+                      onKeyHandle={e => {
+                        e.preventDefault()
+                        this.clearSearch()
+                      }} />
                   }
 
                   <Flex className={css.sentence}>

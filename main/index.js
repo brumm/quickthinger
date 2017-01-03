@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, screen, ipcMain } from 'electron'
+import { app, BrowserWindow, Menu, screen } from 'electron'
 import windowStateKeeper from 'electron-window-state'
 import irpc from 'electron-irpc'
 
@@ -6,6 +6,20 @@ import template from './menu-template'
 import getDirectoryContent from './getDirectoryContent'
 import getIconForFile from './getIconForFile'
 import getRecentDocumentsForApplication from './getRecentDocumentsForApplication'
+
+const { protocol } = require('electron')
+
+app.on('ready', () => {
+  protocol.registerBufferProtocol('icon', ({ url }, callback) => {
+    console.log('getting icon for', url);
+    getIconForFile(url.slice(6), (err, icon) => {
+      callback({
+        mimeType: 'image/png',
+        data: Buffer.from(icon, 'base64')
+      })
+    })
+  })
+})
 
 const irpcMain = irpc.main()
 

@@ -7,11 +7,7 @@ import { getIconForFile } from 'irpc'
 const Icon = memoize(({ path, size, style }) => (
   <div style={{ width: size, height: size, flexShrink: 0, ...style }}>
     {path && path.startsWith('/') ? (
-      <Pinky promise={getIconForFile(path, { width: size, height: size })}>
-        {({ resolved }) => (
-          resolved ? <img width={size} height={size} src={resolved} /> : null
-        )}
-      </Pinky>
+      <img src={`icon://${path}`} />
     ) : (
       <img width={size} height={size} src={path} />
     )}

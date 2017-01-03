@@ -38,7 +38,7 @@
     "babel-preset-stage-0": "^6.5.0",
     "directory-named-webpack-plugin": "^1.1.0",
     "electron-packager": "^8.1.0",
-    "electron-prebuilt": "^1.4.2",
+    "electron-prebuilt": "^1.4.13",
     "electron-rebuild": "^1.2.1",
     "express": "^4.14.0",
     "minimist": "^1.2.0",

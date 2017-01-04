@@ -6,11 +6,11 @@ const { app } = remote
 import { getDirectoryContent } from 'irpc'
 import defaultAction from 'defaultAction.png'
 
+const DEFAULT_LOCATION = app.getPath('downloads')
+
 const objectResolvers = {
   directObject: path => path ? getDirectoryContent(path) : Promise.all([
-    getDirectoryContent(app.getPath('desktop')),
-    // getDirectoryContent(app.getPath('downloads')),
-    // getDirectoryContent('/System/Library/PreferencePanes'),
+    getDirectoryContent(DEFAULT_LOCATION),
   ]).then((...sources) => flattenDeep(sources)),
 
   actionObject: (directObject = {}) => Promise.resolve([

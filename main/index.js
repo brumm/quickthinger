@@ -57,9 +57,11 @@ function createWindow () {
 
   mainWindowState.manage(mainWindow)
   mainWindow.loadURL(windowUrl)
+
   if (DEV) {
-    mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools({ mode: 'undocked' })
   }
+
   mainWindow.on('closed', () => {
     mainWindow = null
   })

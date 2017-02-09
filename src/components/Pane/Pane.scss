@@ -1,8 +1,11 @@
+
 .sentence-fragment {
-  min-width: 185px;
+  min-width: 155px;
+  flex-shrink: 0;
   padding: 10px;
   margin: 5px;
   border-radius: 4px;
+  background-color: #FBFBFB;
 }
 .sentence-fragment-active {
   composes: sentence-fragment;

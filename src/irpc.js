@@ -1,8 +1,8 @@
 import irpc from 'electron-irpc'
-const irpcRenderer = irpc.renderer()
 
 import Cache from 'cache'
 
+const irpcRenderer = irpc.renderer()
 const cache = new Cache(1000 * 60 * 5)
 
 export const getDirectoryContent = path => (

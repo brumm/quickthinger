@@ -22,15 +22,13 @@
     "fuzzaldrin-plus": "^0.3.1",
     "halogen": "^0.2.0",
     "lodash": "^4.16.3",
+    "mobx": "^2.7.0",
+    "mobx-react": "^4.1.0",
     "nodobjc": "^2.1.0",
     "react": "^15.3.0",
     "react-addons-shallow-compare": "^15.3.2",
     "react-dom": "^15.3.0",
-    "react-key-handler": "^0.3.0",
-    "react-pinky-promise": "^1.0.1",
-    "react-router": "^4.0.0-alpha.4",
-    "react-virtualized": "^8.0.11",
-    "readdir-plus": "^0.4.1"
+    "react-virtualized": "^8.11.4"
   },
   "devDependencies": {
     "babel-cli": "^6.8.0",

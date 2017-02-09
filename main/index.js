@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, screen } from 'electron'
+import { app, BrowserWindow, Menu, screen, globalShortcut } from 'electron'
 import windowStateKeeper from 'electron-window-state'
 import irpc from 'electron-irpc'
 
@@ -37,8 +37,8 @@ let mainWindow
 function createWindow () {
   let { width, height } = screen.getPrimaryDisplay().workAreaSize
   let mainWindowState = windowStateKeeper({
-    defaultWidth: 400,
-    defaultHeight: 440
+    defaultWidth: 340,
+    defaultHeight: 335
   });
 
   mainWindow = new BrowserWindow({
@@ -46,14 +46,23 @@ function createWindow () {
     height: mainWindowState.height,
     x: mainWindowState.x,
     y: mainWindowState.y,
-    minWidth: 400,
-    minHeight: 185,
+    resizable: false,
     frame: false,
     show: false,
     webPreferences: {
       webSecurity: false
     }
   })
+
+  if (!globalShortcut.register('Control+Space', () => {
+    if (mainWindow.isVisible()) {
+      mainWindow.hide()
+    } else {
+      mainWindow.show()
+    }
+  })) {
+    console.log('shortcut registration failed')
+  }
 
   mainWindowState.manage(mainWindow)
   mainWindow.loadURL(windowUrl)

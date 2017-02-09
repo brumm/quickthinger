@@ -8,7 +8,6 @@ import css from './Pane.scss'
 
 const Pane = ({ label, icon, active, changeActivePaneIndex, searchTerm }) => (
   <Flex
-    shrink={0}
     basis='0'
     className={active ? css.sentenceFragmentActive : css.sentenceFragment}
     alignItems='center'
@@ -16,10 +15,13 @@ const Pane = ({ label, icon, active, changeActivePaneIndex, searchTerm }) => (
     direction='column'
     onClick={changeActivePaneIndex}
   >
-    <Icon path={icon} size={128} />
+    <Icon path={icon} size={96} />
 
     {searchTerm ? (
-      <div className={css.sentenceObjectLabel} dangerouslySetInnerHTML={{ __html: highlightMatch(label, searchTerm) }} />
+      <div
+        className={css.sentenceObjectLabel}
+        dangerouslySetInnerHTML={{ __html: highlightMatch(label, searchTerm) }}
+      />
     ) : (
       <div className={css.sentenceObjectLabel}>{label}</div>
     )}

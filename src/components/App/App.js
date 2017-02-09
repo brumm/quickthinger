@@ -1,261 +1,112 @@
 
 import React from 'react'
-import { filter } from 'fuzzaldrin-plus'
 import Flex from 'flex-component'
-import Pinky from 'react-pinky-promise'
-import fill from 'lodash/fill'
-import KeyHandler from 'react-key-handler'
+import debounce from 'lodash/debounce'
 import { remote } from 'electron'
+import { observer } from 'mobx-react'
 
 import { getDirectoryContent } from 'irpc'
-import objectResolvers from 'objectResolvers'
 import Pane from 'components/Pane/Pane'
 import QTList from 'components/QTList/QTList'
+import KeyHandler from 'components/KeyHandler/KeyHandler'
+import { wrapAround } from 'utils'
 
 import css from './App.scss'
 
-const { directObject, actionObject, indirectObject } = objectResolvers
+const listItemHeight = 50
 const electronWindow = remote.getCurrentWindow()
-const wrap = (value, bounds) => (value % bounds + bounds) % bounds
+const setWindowSize = debounce((width, height) => electronWindow.setSize(width, height), 50)
 
-class App extends React.Component {
-
-  previousPaneObjects = [
-    { paneObject: { uti: [], displayName: '', icon: '' }, paneResults: [] },
-    { paneObject: { uti: [], displayName: '', icon: '' }, paneResults: [] },
-  ]
-
+@observer class App extends React.Component {
   state = {
-    browsingAt: null,
-    activePaneIndex: 0,
-    activeObjectIndexPerPane: [
-      0, 0, 0
-    ],
-    searchTermsPerPane: [
-      '', '', '',
-    ]
+    activePaneIndex: 0
   }
 
-  quickLook(path) {
-    electronWindow.previewFile(path)
+  changeActivePaneIndex(direction) {
+    this.setState(({ activePaneIndex }) => ({
+      activePaneIndex: wrapAround(activePaneIndex + direction, this.showThirdPane ? 3 : 2)
+    }))
   }
 
-  browseTo(path) {
-    getDirectoryContent(path).then(items => {
-      if (items.length) {
-        const { activePaneIndex } = this.state.activePaneIndex
-        let activeObjectIndexPerPane = this.state.activeObjectIndexPerPane.slice(0)
-        fill(activeObjectIndexPerPane, 0, activePaneIndex + 1)
-
-        this.clearSearch()
-        this.setState({
-          browsingAt: path,
-          activeObjectIndexPerPane
-        })
-      }
-    })
+  // ugh?
+  getActivePaneName(index) {
+    return ['directObjects', 'actionObjects', 'indirectObjects'][index]
   }
 
-  changeActivePaneIndex(newIndex) {
-    this.setState({
-      activePaneIndex: newIndex
-    })
-  }
-
-  changePaneResultIndex(newIndex, paneIndex = this.state.activePaneIndex) {
-    let activeObjectIndexPerPane = this.state.activeObjectIndexPerPane.slice(0)
-    fill(activeObjectIndexPerPane, 0, paneIndex + 1)
-    activeObjectIndexPerPane[paneIndex] = newIndex
-    this.setState({ activeObjectIndexPerPane })
-  }
-
-  clearSearch(paneIndex = this.state.activePaneIndex) {
-    let searchTermsPerPane = this.state.searchTermsPerPane.slice(0)
-    searchTermsPerPane[paneIndex] = ''
-    this.setState({ searchTermsPerPane })
-  }
-
-  handleSearch = e => {
-    const { which, key } = e
-    const { activePaneIndex } = this.state
-    if (
-      which >= 48 && which <= 57 ||
-      which >= 65 && which <= 90
-    ) {
-      // e.preventDefault()
-      let searchTermsPerPane = this.state.searchTermsPerPane.slice(0)
-      searchTermsPerPane[activePaneIndex] += key
-      fill(searchTermsPerPane, '', activePaneIndex + 1)
-      this.changePaneResultIndex(0)
-      this.setState({ searchTermsPerPane })
-    }
-  }
-
-  componentDidMount() {
-    document.addEventListener('keydown', this.handleSearch)
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.handleSearch)
-  }
+  get showThirdPane() { return this.props.store.indirectObjects.items.length > 0 }
 
   render() {
-    let { activePaneIndex, activeObjectIndexPerPane, searchTermsPerPane, browsingAt } = this.state
-    let activePaneResultIndex = activeObjectIndexPerPane[activePaneIndex]
-    let activeSearchTerm = searchTermsPerPane[activePaneIndex]
+    const { store } = this.props
+    const { activePaneIndex } = this.state
+    const activePaneName = this.getActivePaneName(activePaneIndex)
+    const activeSource = store[activePaneName]
 
-    const resolvers = [
-      browsingAt ? () => getDirectoryContent(browsingAt) : directObject,
-      actionObject,
-      indirectObject
-    ]
-
-    const paneObjectsPromise = resolvers.reduce((acc, resolver, paneIndex) => (
-      acc.then(([previousPane, ...otherPanes]) => (
-        resolver(previousPane && previousPane.paneResults[activeObjectIndexPerPane[paneIndex - 1]])
-          .then(currentPaneResults => {
-            const searchTerm = searchTermsPerPane[paneIndex]
-            currentPaneResults = searchTerm
-              ? filter(currentPaneResults, searchTerm, { key: 'displayName' })
-              : currentPaneResults
-            return [
-              {
-                paneResults: currentPaneResults,
-                paneObject: currentPaneResults[activeObjectIndexPerPane[paneIndex]],
-                searchTerm
-              },
-              previousPane,
-              ...otherPanes
-            ]
-          })
-      ))
-    ), Promise.resolve([])).then(intermediary => intermediary.reverse().filter(Boolean))
+    const listHeight = Math.max(
+      Math.min(activeSource.items.length * listItemHeight, 3.5 * listItemHeight),
+      listItemHeight
+    )
+    setWindowSize((this.showThirdPane ? 3 : 2) * 168, listHeight + 153)
 
     return (
-      <Flex className={css.container} direction='column'>
-        <Pinky promise={paneObjectsPromise}>
-          {({ resolved: paneObjects = this.previousPaneObjects, rejected, pending: loading }) => {
-            if (rejected) { throw rejected }
+      <Flex className={css.container} direction='column' grow={1}>
 
-            paneObjects = paneObjects.filter(({ paneObject, searchTerm }) => paneObject || searchTerm)
+        <KeyHandler preventDefault keyValue='Tab'
+          onKeyHandle={({ shiftKey }) => this.changeActivePaneIndex(shiftKey ? -1 : 1)} />
 
-            const activePaneObject = paneObjects[activePaneIndex].paneObject
-            const activePaneResults = paneObjects[activePaneIndex].paneResults
+        <KeyHandler preventDefault keyValue={['ArrowUp', 'ArrowDown']}
+          onKeyHandle={({ key }) => activeSource.changeIndex(key === 'ArrowUp' ? -1 : 1)} />
 
-            let listItemHeight = 50
-            let listHeight = Math.min(activePaneResults.length * listItemHeight, 4.5 * listItemHeight)
+        <KeyHandler preventDefault keyValue='Enter'
+          onKeyHandle={() => {
+            store.actionObjects.selected.execute()
+            electronWindow.hide()
+          }} />
 
-            if (!loading) {
-              this.previousPaneObjects = paneObjects
-              electronWindow.setSize(paneObjects.length * 200, listHeight + 185)
-            }
+        {activePaneName !== 'actionObjects' && [
+          <KeyHandler preventDefault key='ArrowLeft' keyValue='ArrowLeft' onKeyHandle={() => activeSource.browseToParent()} />,
+          <KeyHandler preventDefault key='ArrowRight' keyValue='ArrowRight' onKeyHandle={() => activeSource.browseToChild()} />,
+        ]}
 
-            return (
-              <Flex grow={1} direction='column'>
+        <Flex className={css.sentence}>
+          <Pane
+            active={activePaneIndex === 0}
+            icon={store.directObjects.selected.icon}
+            label={store.directObjects.selected.name}
+            searchTerm={store.directObjects.searchTerm.join('')}
+            changeActivePaneIndex={() => this.setState({ activePaneIndex: 0 })}
+          />
 
-                {!loading && activePaneObject && activePaneObject.components && browsingAt !== '/' &&
-                  <KeyHandler keyEventName='keydown' keyValue='ArrowLeft'
-                    onKeyHandle={e => {
-                      e.preventDefault()
-                      this.browseTo(activePaneObject.components.slice(0, -2).join('/'))
-                    }}
-                  />
-                }
+          <Pane
+            active={activePaneIndex === 1}
+            icon={store.actionObjects.selected.icon}
+            label={store.actionObjects.selected.name}
+            searchTerm={store.actionObjects.searchTerm.join('')}
+            changeActivePaneIndex={() => this.setState({ activePaneIndex: 1 })}
+          />
 
-                {!loading && activePaneObject &&
-                  <KeyHandler keyEventName='keydown' keyValue='ArrowRight'
-                    onKeyHandle={e => {
-                      e.preventDefault()
-                      activePaneObject.uti.includes('public.folder')
-                        ? this.browseTo(activePaneObject.path)
-                        : this.quickLook(activePaneObject.path)
-                    }}
-                  />
-                }
+          {this.showThirdPane && (
+            <Pane
+              active={activePaneIndex === 2}
+              icon={store.indirectObjects.selected.icon}
+              label={store.indirectObjects.selected.name}
+              searchTerm={store.indirectObjects.searchTerm.join('')}
+              changeActivePaneIndex={() => this.setState({ activePaneIndex: 2 })}
+            />
+          )}
+        </Flex>
 
-                {!loading && activePaneObject &&
-                  <KeyHandler keyEventName='keydown' keyValue=' '
-                    onKeyHandle={e => {
-                      e.preventDefault()
-                      activePaneObject.uti.includes('public.folder')
-                        ? this.browseTo(activePaneObject.path)
-                        : this.quickLook(activePaneObject.path)
-                    }}
-                  />
-                }
-
-                {!loading && activePaneObject &&
-                  <KeyHandler keyEventName='keydown' keyValue='ArrowDown'
-                    onKeyHandle={e => {
-                      e.preventDefault()
-                      this.changePaneResultIndex(
-                        wrap(activePaneResultIndex + 1, activePaneResults.length)
-                      )
-                    }
-                  } />
-                }
-
-                {!loading && activePaneObject &&
-                  <KeyHandler keyEventName='keydown' keyValue='ArrowUp'
-                    onKeyHandle={e => {
-                      e.preventDefault()
-                      this.changePaneResultIndex(
-                        wrap(activePaneResultIndex - 1, activePaneResults.length)
-                      )
-                    }
-                  } />
-                }
-
-                {!loading && activePaneObject &&
-                  <KeyHandler keyEventName='keydown' keyValue='Tab'
-                    onKeyHandle={e => {
-                      e.preventDefault()
-                      this.changeActivePaneIndex(
-                        wrap(activePaneIndex + (e.shiftKey ? -1 : 1), paneObjects.length)
-                      )
-                    }
-                  } />
-                }
-
-                {activeSearchTerm &&
-                  <KeyHandler keyEventName='keydown' keyValue='Backspace'
-                    onKeyHandle={e => {
-                      e.preventDefault()
-                      this.clearSearch()
-                    }} />
-                }
-
-                <Flex className={css.sentence}>
-                  {paneObjects.length !== 1
-                    ? paneObjects.map(({ paneObject = {}, searchTerm }, paneIndex) => (
-                    <Pane
-                      key={`pane-${paneIndex}`}
-                      active={paneIndex === activePaneIndex}
-                      label={paneObject.displayName || paneObject.name}
-                      searchTerm={searchTerm}
-                      icon={paneObject.icon || paneObject.path}
-                      changeActivePaneIndex={() => this.changeActivePaneIndex(paneIndex)}
-                    />
-                )) : [
-                  <Pane key='directObjectId' active label='Type to search' />,
-                  <Pane key='actionObjectId' />
-                ]}
-                </Flex>
-
-                <Flex grow={1}>
-                  <QTList
-                    loading={loading}
-                    height={listHeight}
-                    listItemHeight={listItemHeight}
-                    items={activePaneResults}
-                    selectedIndex={activePaneResultIndex}
-                    onIndexChange={index => this.changePaneResultIndex(index)}
-                  />
-                </Flex>
-              </Flex>
-            )
-          }}
-        </Pinky>
+        <Flex grow={1}>
+          <QTList
+            activePaneName={activePaneName}
+            didSearch={activeSource.searchTerm.length > 0}
+            loading={activeSource.loading}
+            listHeight={listHeight}
+            listItemHeight={listItemHeight}
+            items={activeSource.items}
+            selectedIndex={activeSource.index}
+            onIndexChange={index => activeSource.index = index}
+          />
+        </Flex>
       </Flex>
     )
   }

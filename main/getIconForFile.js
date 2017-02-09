@@ -3,7 +3,7 @@ import $ from 'nodobjc'
 $.framework('Foundation')
 $.framework('AppKit')
 
-export default function getIconForFile(path, callback, { width = 128, height = 128 } = {}) {
+export default function getIconForFile(path, callback, { width = 96, height = 96 } = {}) {
   const pool     = $.NSAutoreleasePool('alloc')('init')
 
   const rect = $.NSMakeRect(0, 0, width, height)

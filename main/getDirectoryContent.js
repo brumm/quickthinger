@@ -45,14 +45,14 @@ function getDirectoryContent(path, callback) {
     let file = {
       path: dict('valueForKey', $('_NSURLPathKey')).toString(),
       components: components,
-      name: url('lastPathComponent').toString(),
-      displayName: dict('valueForKey', $('NSURLLocalizedNameKey')).toString(),
-      uti: [dict('valueForKey', $('NSURLTypeIdentifierKey')).toString()],
+      lastPathComponent: url('lastPathComponent').toString(),
+      name: dict('valueForKey', $('NSURLLocalizedNameKey')).toString(),
+      type: [dict('valueForKey', $('NSURLTypeIdentifierKey')).toString()],
       isPackage: isPackage,
     }
 
-    if (isFile) { file.uti.unshift('public.item') }
-    if (isDirectory && isPackage) { file.uti.unshift('public.folder') }
+    if (isFile) { file.type.unshift('public.item') }
+    if (isDirectory && isPackage) { file.type.unshift('public.folder') }
 
     files.push(file)
   }

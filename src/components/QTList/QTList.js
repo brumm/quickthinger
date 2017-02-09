@@ -12,38 +12,49 @@ export default class QTList extends React.Component {
 
   loadingRenderer = () => (
     <Flex className={css.listItemEmpty} justifyContent='center' alignItems='center'>
-      <Loader />
+      <Loader size={this.props.listItemHeight - 20} />
     </Flex>
   )
 
   noRowsRenderer = () => (
-    <Flex className={css.listItemEmpty} style={{ height: this.props.listItemHeight }} justifyContent='center' alignItems='center'>
-      {this.props.didSearch ? 'No Result' : 'This folder is empty'}
+    <Flex
+      className={css.listItemEmpty}
+      justifyContent='center' alignItems='center'
+    >
+      {this.props.didSearch ? 'No Result' : 'Nada'}
     </Flex>
   )
+
+  componentWillReceiveProps({activePaneName}) {
+    if (this.props.activePaneName !== activePaneName) {
+      this.List.forceUpdateGrid()
+    }
+  }
 
   rowRenderer = ({ key, index, style}) => {
     const item = this.props.items[index]
     return (
       <Flex
-        alignItems='center'
         key={key}
         style={style}
+        alignItems='center'
+        onClick={() => this.props.onIndexChange(index)}
         className={index === this.props.selectedIndex
           ? css.listItemSelected
-          : index % 2 ? css.listItem : css.listItemOdd}
-        onClick={() => this.props.onIndexChange(index)}
+          : index % 2
+            ? css.listItem
+            : css.listItemOdd}
       >
-        <Icon path={item.icon || item.path} size={32} style={{ marginRight: 10 }} />
+        <Icon path={item.icon} size={32} style={{ marginRight: 10 }} />
 
         <div>
           <div className={css.name}>
-            {item.displayName || item.name}
+            {item.name}
           </div>
 
           <Flex>
-            {item.description ? ([
-              <div key='path' className={css.path}>{item.description}</div>,
+            {item.details ? ([
+              <div key='path' className={css.path}>{item.details}</div>,
             ]) : item.path ? ([
               <div key='path' className={css.path}>{item.path.replace(item.name, '')}</div>,
               <div key='name' style={{ flexShrink: 0 }} className={css.path}>{item.name}</div>,
@@ -51,28 +62,38 @@ export default class QTList extends React.Component {
           </Flex>
         </div>
 
-        {item.uti &&
-          <div className={css.descendableIndicator} style={{visibility: item.uti.includes('public.folder') ? 'visible' : 'hidden'}}>
-            {'ᐳ'}
-          </div>
-        }
+        <div className={css.descendableIndicator} style={{
+          visibility: item.providesChildren ? 'visible' : 'hidden'
+        }}>
+          {'ᐳ'}
+        </div>
       </Flex>
     )
   }
 
   render() {
+    const {
+      items,
+      listItemHeight,
+      loading,
+      selectedIndex,
+      onDidListHeightChange,
+      listHeight
+    } = this.props
+
     return (
       <AutoSizer disableHeight>
         {({ width }) => (
           <List
+            ref={component => this.List = component}
             className={css.list}
             width={width}
-            height={this.props.height}
-            rowCount={this.props.items.length}
-            rowHeight={this.props.listItemHeight}
-            noRowsRenderer={this.props.loading ? this.loadingRenderer : undefined}
+            height={listHeight}
+            rowCount={items.length}
+            rowHeight={listItemHeight}
+            noRowsRenderer={loading ? this.loadingRenderer : this.noRowsRenderer}
             rowRenderer={this.rowRenderer}
-            scrollToIndex={this.props.selectedIndex}
+            scrollToIndex={selectedIndex}
             scrollToAlignment='center'
             overscanRowCount={0}
             tabIndex={null}

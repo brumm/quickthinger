@@ -16,6 +16,7 @@ module.exports = {
 
   webpack: {
     extra: {
+      devtool: 'inline-source-map',
       resolve: {
         root: [path.resolve('./src')],
         extensions: ['', '.js', '.scss']
